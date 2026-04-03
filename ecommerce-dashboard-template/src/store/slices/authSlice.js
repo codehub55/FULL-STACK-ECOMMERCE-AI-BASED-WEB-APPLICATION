@@ -49,20 +49,24 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     authUser: null,
+    isAuthenticated: false,
     isUpdatingProfile: false,
     isUpdatingPassword: false,
     isCheckingAuth: true,
+    loading: false,
   },
   reducers: {
     setAuthUser: (state, action) => {
       const user = action.payload || null;
       state.authUser = user;
+      state.isAuthenticated = !!user;
     },
     setLoading: (state, action) => {
       state.loading = !!action.payload;
     },
     logout: (state) => {
       state.authUser = null;
+      state.isAuthenticated = false;
     },
   },
   extraReducers: (builder) => {
@@ -73,10 +77,12 @@ const authSlice = createSlice({
       .addCase(fetchAuthUser.fulfilled, (state, action) => {
         state.isCheckingAuth = false;
         state.authUser = action.payload?.user || null;
+        state.isAuthenticated = !!state.authUser;
       })
       .addCase(fetchAuthUser.rejected, (state) => {
         state.isCheckingAuth = false;
         state.authUser = null;
+        state.isAuthenticated = false;
       });
 
     builder
