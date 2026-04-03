@@ -20,8 +20,8 @@ import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 
 const AppContent = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useSelector(
-    (state) => state.auth || { isAuthenticated: false, user: null }
+  const { isAuthenticated, authUser } = useSelector(
+    (state) => state.auth || { isAuthenticated: false, authUser: null }
   );
   const { theme } = useTheme();
 
@@ -49,12 +49,12 @@ const AppContent = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
-        
+
         {/* Protected Admin Route */}
         <Route
           path="/"
           element={
-            isAuthenticated && user?.role === "Admin" ? (
+            isAuthenticated && authUser?.role === "Admin" ? (
               <div className="flex min-h-screen">
                 <SideBar />
                 <Dashboard />

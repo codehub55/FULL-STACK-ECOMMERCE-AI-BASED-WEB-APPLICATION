@@ -10,9 +10,10 @@ const Login = () => {
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth || {});
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("admin123");
   const [error, setError] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
 
   const baseURL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
@@ -20,22 +21,50 @@ const Login = () => {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    setDebugInfo("Sending login request...");
 
     try {
       dispatch(setLoading(true));
+
+      console.log("🚀 Login attempt with:", { email, baseURL });
+
       const res = await axios.post(
         `${baseURL}/auth/login`,
         { email, password },
         { withCredentials: true }
       );
 
+      console.log("✅ Login response:", res.data);
+      setDebugInfo(`✅ Login successful! Got user: ${res.data?.user?.name}`);
+
       const user = res.data?.user || null;
+      if (!user) {
+        setError("No user data in response");
+        setDebugInfo("❌ Error: No user data returned");
+        dispatch(setLoading(false));
+        return;
+      }
+
+      console.log("📝 Dispatching setAuthUser with:", user);
       dispatch(setAuthUser(user));
       dispatch(setLoading(false));
-      navigate("/");
+
+      console.log("✅ Auth state updated, navigating to dashboard...");
+      setTimeout(() => navigate("/"), 500);
+
     } catch (err) {
       dispatch(setLoading(false));
-      setError(err.response?.data?.message || "Login failed.");
+      const errorMsg = err.response?.data?.message || err.message || "Login failed";
+      setError(errorMsg);
+
+      console.error("❌ Login error:", {
+        status: err.response?.status,
+        message: errorMsg,
+        data: err.response?.data,
+        error: err,
+      });
+
+      setDebugInfo(`❌ Error: ${errorMsg}`);
     }
   };
 
@@ -53,6 +82,12 @@ const Login = () => {
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm font-semibold">
             {error}
+          </div>
+        )}
+
+        {debugInfo && (
+          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-mono">
+            {debugInfo}
           </div>
         )}
 
@@ -91,6 +126,11 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className="mt-4 text-xs text-muted-foreground bg-muted p-3 rounded">
+          <p>📌 API URL: {baseURL}</p>
+          <p>💡 Demo credentials prefilled</p>
+        </div>
 
         <div className="mt-4 text-sm text-muted-foreground">
           <Link to="/password/forgot" className="text-primary hover:underline">
